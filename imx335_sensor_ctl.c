@@ -37,6 +37,8 @@ extern ISP_SNS_COMMBUS_U g_aunImx335BusInfo[];
 #define IMX335_5M_30FPS_10BIT_WDR_MODE (1) //2592x1944
 #define IMX335_4M_25FPS_10BIT_WDR_MODE (2) //2592x1520
 #define IMX335_4M_30FPS_10BIT_WDR_MODE (3) //2592x1520
+#define IMX335_60FPS_BINNING_MODE      (4) //1296x972
+
 int IMX335_i2c_init(VI_PIPE ViPipe)
 {
 	char acDevFile[16] = { 0 };
@@ -160,6 +162,7 @@ void IMX335_linear_5M30_12bit_init(VI_PIPE ViPipe);
 void IMX335_wdr_5M30_10bit_init(VI_PIPE ViPipe);
 void IMX335_wdr_4M25_10bit_init(VI_PIPE ViPipe);
 void IMX335_wdr_4M30_10bit_init(VI_PIPE ViPipe);
+void   IMX335_binning_60pfs_init(VI_PIPE ViPipe);
 
 void imx335_default_reg_init(VI_PIPE ViPipe)
 {
@@ -209,7 +212,15 @@ void IMX335_init(VI_PIPE ViPipe)
 			return;
 		}
 	} else if (enWDRMode == WDR_MODE_NONE) {
-		IMX335_linear_5M30_12bit_init(ViPipe);
+	 	switch (u8ImgMode) {
+      	// - 2x2 binning @ 60fps
+      	case IMX335_60FPS_BINNING_MODE: {
+        	IMX335_binning_60pfs_init(ViPipe);
+      	}; break;
+      
+      	default:
+        	IMX335_linear_5M30_12bit_init(ViPipe);
+	 }
 	} else {
 		printf("IMX335_init Not support this mode\n");
 		return;
@@ -228,20 +239,58 @@ void IMX335_exit(VI_PIPE ViPipe)
 	return;
 }
 
-void IMX335_linear_5M30_12bit_init(VI_PIPE ViPipe)
-{
+void IMX335_linear_5M30_12bit_init(VI_PIPE ViPipe)//Test
+{		
+	
 	IMX335_write_register(ViPipe, 0x3000, 0x01); // standby
 
 	IMX335_write_register(ViPipe, 0x300C, 0x5B);
 	IMX335_write_register(ViPipe, 0x300D, 0x40);
+
+	//IMX335_write_register(ViPipe, 0x3018, 0x00);//window mode, 0-default | 3-binning | 4- cropping
+	IMX335_write_register(ViPipe, 0x3018, 0x04);//window mode, 0-default | 3-binning | 4- cropping
+	IMX335_write_register(ViPipe, 0x302C, 0x3c);//HTRIMMING Horiz Start in cropping  START
+	IMX335_write_register(ViPipe, 0x302D, 0x00);
+	IMX335_write_register(ViPipe, 0x302E, 0x20);//HNUM Horiz size 0A20 - 2592 cropping size designation
+	IMX335_write_register(ViPipe, 0x302F, 0x0A);
+
+    //2592x1944      2592x1520 
+    //DevRect_w=2560  DevRect_h=1440
+	IMX335_write_register(ViPipe, 0x3030, 0xF8);//VMAX default 1194h  , 0CE4 for 2560x1440
+	IMX335_write_register(ViPipe, 0x3031, 0x08);// Cropping 08F8h - 1024  //Input AD 
+	IMX335_write_register(ViPipe, 0x3032, 0x00);
+	IMX335_write_register(ViPipe, 0x3034, 0x26);//HMAX default 0226h  //0294h is for 25fps
+	IMX335_write_register(ViPipe, 0x3035, 0x02);//0294h is for 25fps  , 0113h for 60fps , 16E for 45fps
+
+
+	IMX335_write_register(ViPipe, 0x3056, 0xB4); //Y-OUTSIZE  effective pixel lines 07ACh
+	IMX335_write_register(ViPipe, 0x3057, 0x05); //5B4h = 1440
+
+	IMX335_write_register(ViPipe, 0x3072, 0x28);// Vert Crop start
+	IMX335_write_register(ViPipe, 0x3073, 0x00);
+	IMX335_write_register(ViPipe, 0x3074, 0x50);// Upper left cropping postion
+	IMX335_write_register(ViPipe, 0x3075, 0x02);
+
+	IMX335_write_register(ViPipe, 0x3076, 0x18);//// Vert Cropping Size designation
+	IMX335_write_register(ViPipe, 0x3077, 0x0C);
+
+	
 	IMX335_write_register(ViPipe, 0x3050, 0x00);
+
+	IMX335_write_register(ViPipe, 0x30c6, 0x12);//Black Offset Addr 12h
+
+	IMX335_write_register(ViPipe, 0x30CE, 0x64);//UNRD_Line_Max in cropping 
+	IMX335_write_register(ViPipe, 0x30D8, 0x6c);//UNREAD_ED_ADR in cropping
+	IMX335_write_register(ViPipe, 0x30D9, 0x0e);
 
 	IMX335_write_register(ViPipe, 0x314C, 0xC0);
 
 	IMX335_write_register(ViPipe, 0x315A, 0x06);
 	IMX335_write_register(ViPipe, 0x316A, 0x7E);
 
-	IMX335_write_register(ViPipe, 0x319D, 0x00);
+	IMX335_write_register(ViPipe, 0x319D, 0x00);//00-10bit | 01 - 12bit
+
+
 	IMX335_write_register(ViPipe, 0x319E, 0x02);
 	IMX335_write_register(ViPipe, 0x31A1, 0x00);
 	IMX335_write_register(ViPipe, 0x3288, 0x21);
@@ -250,8 +299,8 @@ void IMX335_linear_5M30_12bit_init(VI_PIPE ViPipe)
 	IMX335_write_register(ViPipe, 0x3414, 0x05);
 	IMX335_write_register(ViPipe, 0x3416, 0x18);
 
-	IMX335_write_register(ViPipe, 0x341C, 0xFF);
-	IMX335_write_register(ViPipe, 0x341D, 0x01);
+	IMX335_write_register(ViPipe, 0x341C, 0xFF); // Input AD bit, changing this affects output
+	IMX335_write_register(ViPipe, 0x341D, 0x01); //Input AD bit 0047-12bit | 01FF-10bit
 
 	IMX335_write_register(ViPipe, 0x3648, 0x01);
 	IMX335_write_register(ViPipe, 0x364A, 0x04);
@@ -339,7 +388,7 @@ void IMX335_linear_5M30_12bit_init(VI_PIPE ViPipe)
 	delay_ms(18);
 	IMX335_write_register(ViPipe, 0x3002, 0x00);
 
-	printf("-------TEST Sony IMX335_init_5M_2592x1944_12bit_linear30 Initial OK!-------\n");
+	printf("-------TEST Sony cropped IMX335_init_5M_2592x1944_12bit_linear30 Initial OK!-------\n");
 }
 
 void IMX335_wdr_5M30_10bit_init(VI_PIPE ViPipe)
@@ -773,4 +822,286 @@ void IMX335_wdr_4M30_10bit_init(VI_PIPE ViPipe)
 	IMX335_write_register(ViPipe, 0x3002, 0x00);
 
 	printf("-------Sony IMX335_init_4M_2592x1520_10bit_wdr30 Initial OK!-------\n");
+}
+
+//DevRect_w=1296 DevRect_h=972
+void IMX335_linear_binning_30fps_12bit_init(VI_PIPE ViPipe)
+{
+	IMX335_write_register(ViPipe, 0x3000, 0x01); // standby
+
+	IMX335_write_register(ViPipe, 0x300C, 0x5B);
+	IMX335_write_register(ViPipe, 0x300D, 0x40);
+	IMX335_write_register(ViPipe, 0x3050, 0x00);
+
+	/* Horizontal/Vertical 2/2-line binning */
+	IMX335_write_register(ViPipe, 0x3018, 0x01);
+	IMX335_write_register(ViPipe, 0x3199, 3 << 4);
+	IMX335_write_register(ViPipe, 0x3300, 0x01);
+	IMX335_write_register(ViPipe, 0x304C, 0x14);
+	IMX335_write_register(ViPipe, 0x3056, 0xd8);
+	IMX335_write_register(ViPipe, 0x3057, 0x3);
+	IMX335_write_register(ViPipe, 0x3072, 0x30);
+	IMX335_write_register(ViPipe, 0x3073, 0);
+	IMX335_write_register(ViPipe, 0x3076, 0x60);
+	IMX335_write_register(ViPipe, 0x3077, 0xf);
+	IMX335_write_register(ViPipe, 0x3078, 4);
+
+	IMX335_write_register(ViPipe, 0x314C, 0xC0);
+
+	IMX335_write_register(ViPipe, 0x315A, 0x06);
+	IMX335_write_register(ViPipe, 0x316A, 0x7E);
+
+	IMX335_write_register(ViPipe, 0x319D, 0x01);
+	IMX335_write_register(ViPipe, 0x319E, 0x02);
+	IMX335_write_register(ViPipe, 0x31A1, 0x00);
+	IMX335_write_register(ViPipe, 0x3288, 0x21);
+	IMX335_write_register(ViPipe, 0x328A, 0x02);
+
+	IMX335_write_register(ViPipe, 0x3414, 0x05);
+	IMX335_write_register(ViPipe, 0x3416, 0x18);
+
+	IMX335_write_register(ViPipe, 0x341C, 0xFF);
+	IMX335_write_register(ViPipe, 0x341D, 0x01);
+
+	IMX335_write_register(ViPipe, 0x3648, 0x01);
+	IMX335_write_register(ViPipe, 0x364A, 0x04);
+	IMX335_write_register(ViPipe, 0x364C, 0x04);
+
+	IMX335_write_register(ViPipe, 0x3678, 0x01);
+	IMX335_write_register(ViPipe, 0x367C, 0x31);
+	IMX335_write_register(ViPipe, 0x367E, 0x31);
+
+	IMX335_write_register(ViPipe, 0x3706, 0x10);
+	IMX335_write_register(ViPipe, 0x3708, 0x03);
+
+	IMX335_write_register(ViPipe, 0x3714, 0x02);
+	IMX335_write_register(ViPipe, 0x3715, 0x02);
+	IMX335_write_register(ViPipe, 0x3716, 0x01);
+	IMX335_write_register(ViPipe, 0x3717, 0x03);
+	IMX335_write_register(ViPipe, 0x371C, 0x3D);
+	IMX335_write_register(ViPipe, 0x371D, 0x3F);
+
+	IMX335_write_register(ViPipe, 0x372C, 0x00);
+	IMX335_write_register(ViPipe, 0x372D, 0x00);
+	IMX335_write_register(ViPipe, 0x372E, 0x46);
+	IMX335_write_register(ViPipe, 0x372F, 0x00);
+	IMX335_write_register(ViPipe, 0x3730, 0x89);
+	IMX335_write_register(ViPipe, 0x3731, 0x00);
+	IMX335_write_register(ViPipe, 0x3732, 0x08);
+	IMX335_write_register(ViPipe, 0x3733, 0x01);
+	IMX335_write_register(ViPipe, 0x3734, 0xFE);
+	IMX335_write_register(ViPipe, 0x3735, 0x05);
+
+	IMX335_write_register(ViPipe, 0x3740, 0x02);
+
+	IMX335_write_register(ViPipe, 0x375D, 0x00);
+	IMX335_write_register(ViPipe, 0x375E, 0x00);
+	IMX335_write_register(ViPipe, 0x375F, 0x11);
+	IMX335_write_register(ViPipe, 0x3760, 0x01);
+
+	IMX335_write_register(ViPipe, 0x3768, 0x1B);
+	IMX335_write_register(ViPipe, 0x3769, 0x1B);
+	IMX335_write_register(ViPipe, 0x376A, 0x1B);
+	IMX335_write_register(ViPipe, 0x376B, 0x1B);
+	IMX335_write_register(ViPipe, 0x376C, 0x1A);
+	IMX335_write_register(ViPipe, 0x376D, 0x17);
+	IMX335_write_register(ViPipe, 0x376E, 0x0F);
+
+	IMX335_write_register(ViPipe, 0x3776, 0x00);
+	IMX335_write_register(ViPipe, 0x3777, 0x00);
+	IMX335_write_register(ViPipe, 0x3778, 0x46);
+	IMX335_write_register(ViPipe, 0x3779, 0x00);
+	IMX335_write_register(ViPipe, 0x377A, 0x89);
+	IMX335_write_register(ViPipe, 0x377B, 0x00);
+	IMX335_write_register(ViPipe, 0x377C, 0x08);
+	IMX335_write_register(ViPipe, 0x377D, 0x01);
+	IMX335_write_register(ViPipe, 0x377E, 0x23);
+	IMX335_write_register(ViPipe, 0x377F, 0x02);
+	IMX335_write_register(ViPipe, 0x3780, 0xD9);
+	IMX335_write_register(ViPipe, 0x3781, 0x03);
+	IMX335_write_register(ViPipe, 0x3782, 0xF5);
+	IMX335_write_register(ViPipe, 0x3783, 0x06);
+	IMX335_write_register(ViPipe, 0x3784, 0xA5);
+	IMX335_write_register(ViPipe, 0x3788, 0x0F);
+	IMX335_write_register(ViPipe, 0x378A, 0xD9);
+	IMX335_write_register(ViPipe, 0x378B, 0x03);
+	IMX335_write_register(ViPipe, 0x378C, 0xEB);
+	IMX335_write_register(ViPipe, 0x378D, 0x05);
+	IMX335_write_register(ViPipe, 0x378E, 0x87);
+	IMX335_write_register(ViPipe, 0x378F, 0x06);
+	IMX335_write_register(ViPipe, 0x3790, 0xF5);
+	IMX335_write_register(ViPipe, 0x3792, 0x43);
+	IMX335_write_register(ViPipe, 0x3794, 0x7A);
+	IMX335_write_register(ViPipe, 0x3796, 0xA1);
+	IMX335_write_register(ViPipe, 0x3A18, 0x7F);
+	IMX335_write_register(ViPipe, 0x3A1A, 0x37);
+	IMX335_write_register(ViPipe, 0x3A1C, 0x37);
+	IMX335_write_register(ViPipe, 0x3A1E, 0xF7);
+	IMX335_write_register(ViPipe, 0x3A1F, 0x00);
+	IMX335_write_register(ViPipe, 0x3A20, 0x3F);
+	IMX335_write_register(ViPipe, 0x3A22, 0x6F);
+	IMX335_write_register(ViPipe, 0x3A24, 0x3F);
+	IMX335_write_register(ViPipe, 0x3A26, 0x5F);
+	IMX335_write_register(ViPipe, 0x3A28, 0x2F);
+
+	imx335_default_reg_init(ViPipe);
+
+	// only required for 2x2 binning
+	IMX335_write_register(ViPipe, 0x3079, 0xfd);
+	IMX335_write_register(ViPipe, 0x307A, 4);
+	IMX335_write_register(ViPipe, 0x307B, 0xfe);
+	IMX335_write_register(ViPipe, 0x307C, 4);
+	IMX335_write_register(ViPipe, 0x307D, 0xfb);
+	IMX335_write_register(ViPipe, 0x307E, 4);
+	IMX335_write_register(ViPipe, 0x307F, 2);
+	IMX335_write_register(ViPipe, 0x3080, 4);
+	IMX335_write_register(ViPipe, 0x3081, 0xfd);
+	IMX335_write_register(ViPipe, 0x3082, 4);
+	IMX335_write_register(ViPipe, 0x3083, 0xfe);
+	IMX335_write_register(ViPipe, 0x3084, 4);
+	IMX335_write_register(ViPipe, 0x3085, 0xfb);
+	IMX335_write_register(ViPipe, 0x3086, 4);
+	IMX335_write_register(ViPipe, 0x3087, 2);
+	IMX335_write_register(ViPipe, 0x30A4, 0x77);
+	IMX335_write_register(ViPipe, 0x30A8, 0x20);
+	IMX335_write_register(ViPipe, 0x30A9, 0);
+	IMX335_write_register(ViPipe, 0x30AC, 8);
+	IMX335_write_register(ViPipe, 0x30AD, 8);
+	IMX335_write_register(ViPipe, 0x30B0, 20);
+	IMX335_write_register(ViPipe, 0x30B1, 0);
+	IMX335_write_register(ViPipe, 0x30B4, 0x10);
+	IMX335_write_register(ViPipe, 0x30B5, 0x10);
+	IMX335_write_register(ViPipe, 0x30B6, 0);
+	IMX335_write_register(ViPipe, 0x30B7, 0);
+	IMX335_write_register(ViPipe, 0x3112, 0x10);
+	IMX335_write_register(ViPipe, 0x3113, 0);
+	IMX335_write_register(ViPipe, 0x3116, 0x10);
+	IMX335_write_register(ViPipe, 0x3117, 0);
+
+	IMX335_write_register(ViPipe, 0x3000, 0x00); // Standby Cancel
+	delay_ms(18);
+	IMX335_write_register(ViPipe, 0x3002, 0x00);
+
+	printf("-------Sony IMX335_init_binning DevRect_w=1296 DevRect_h=972 Initial OK!-------\n");
+}
+
+void IMX335_binning_60pfs_init(VI_PIPE ViPipe) {
+  
+  //30fps instead
+  IMX335_linear_binning_30fps_12bit_init(ViPipe);
+  return;
+
+  IMX335_write_register(ViPipe, 0x3000, 0x01);  // standby
+
+  IMX335_write_register(ViPipe, 0x300C, 0xB6);  // - BCWAIT_TIME = 74.25
+  IMX335_write_register(ViPipe, 0x300D, 0x7F);  // - CPWAIT_TIME = 74.25
+
+  
+  IMX335_write_register(ViPipe, 0x3018, 0x01);  // - WINMODE = 2x2 binning
+  IMX335_write_register(ViPipe, 0x3300, 0x01);  // - TCYCLE = 2x2 binning (0 - all pixels)
+  
+  
+  IMX335_write_register(ViPipe, 0x3034, 0x13);  // - HMAX = 30/60
+  IMX335_write_register(ViPipe, 0x3035, 0x01);
+  
+  IMX335_write_register(ViPipe, 0x3050, 0x00);  // - ADBIT = 10bit
+  
+  IMX335_write_register(ViPipe, 0x3056, 0xD8);
+  IMX335_write_register(ViPipe, 0x3057, 0x03); 
+  
+  IMX335_write_register(ViPipe, 0x3072, 0x30); 
+  IMX335_write_register(ViPipe, 0x3073, 0x00);
+ 
+  IMX335_write_register(ViPipe, 0x3074, 0xA8);
+  IMX335_write_register(ViPipe, 0x3075, 0x00);
+  
+  IMX335_write_register(ViPipe, 0x3076, 0x60); 
+  IMX335_write_register(ViPipe, 0x3077, 0x0F); 
+  
+
+  // --- INCSEL
+  IMX335_write_register(ViPipe, 0x314C, 0x80);  // INCKSEL1 = 
+  IMX335_write_register(ViPipe, 0x314D, 0x00);
+  IMX335_write_register(ViPipe, 0x315A, 0x06);  // INCKSEL2 = 37.125 / 24 | 891
+  IMX335_write_register(ViPipe, 0x3168, 0x68);  // INCKSEL3 = 37.125 / 74.25
+  IMX335_write_register(ViPipe, 0x316A, 0x7E);  // INCKSEL4 = 37.125
+
+  IMX335_write_register(ViPipe, 0x3199, 0x10);  // HADD / VADD = 2x2 binning
+  IMX335_write_register(ViPipe, 0x319D, 0x00);
+  IMX335_write_register(ViPipe, 0x319E, 0x01);  // SYS_MODE = 1188Mbps
+  
+  
+  IMX335_write_register(ViPipe, 0x341C, 0xFF);  // ADBIT1 = 10-bit
+  IMX335_write_register(ViPipe, 0x341D, 0x01);
+  IMX335_write_register(ViPipe, 0x3A01, 0x03);  // LANEMODE = CSI-2 x4
+  
+  // --- Timings
+  IMX335_write_register(ViPipe, 0x3A18, 0x7F);
+  IMX335_write_register(ViPipe, 0x3A1A, 0x37);
+  IMX335_write_register(ViPipe, 0x3A1C, 0x37);
+  IMX335_write_register(ViPipe, 0x3A1E, 0xF7);
+  IMX335_write_register(ViPipe, 0x3A1F, 0x00);
+  
+  IMX335_write_register(ViPipe, 0x3A20, 0x3F);
+  IMX335_write_register(ViPipe, 0x3A22, 0x6F);
+  IMX335_write_register(ViPipe, 0x3A24, 0x3F);
+  IMX335_write_register(ViPipe, 0x3A26, 0x5F);
+  IMX335_write_register(ViPipe, 0x3A28, 0x2F);
+
+  
+  // - Shutter configuration
+  uint32_t lines = 4500 - 1;
+  IMX335_write_register(ViPipe, 0x3058, lines & 0xFF);
+  IMX335_write_register(ViPipe, 0x3059, (lines >> 8) & 0xFF);
+  IMX335_write_register(ViPipe, 0x305A, (lines >> 16) & 0x0F);
+  
+  // - Static registers
+  IMX335_write_register(ViPipe, 0x3078, 0x04);
+  IMX335_write_register(ViPipe, 0x3079, 0xFD);
+  IMX335_write_register(ViPipe, 0x307A, 0x04);
+  IMX335_write_register(ViPipe, 0x307B, 0xFE);
+  IMX335_write_register(ViPipe, 0x307C, 0x04);
+  IMX335_write_register(ViPipe, 0x307D, 0xFB);
+  IMX335_write_register(ViPipe, 0x307E, 0x04);
+  IMX335_write_register(ViPipe, 0x307F, 0x02);
+  
+  IMX335_write_register(ViPipe, 0x3080, 0x04);
+  IMX335_write_register(ViPipe, 0x3081, 0xFD);
+  IMX335_write_register(ViPipe, 0x3082, 0x04);
+  IMX335_write_register(ViPipe, 0x3083, 0xFE);
+  IMX335_write_register(ViPipe, 0x3084, 0x04);
+  IMX335_write_register(ViPipe, 0x3085, 0xFB);
+  IMX335_write_register(ViPipe, 0x3086, 0x04);
+  IMX335_write_register(ViPipe, 0x3087, 0x02);
+  
+  IMX335_write_register(ViPipe, 0x30A4, 0x77);
+  IMX335_write_register(ViPipe, 0x30A8, 0x20);
+  IMX335_write_register(ViPipe, 0x30A9, 0x00);
+  
+  IMX335_write_register(ViPipe, 0x30AC, 0x08);
+  IMX335_write_register(ViPipe, 0x30AD, 0x08);
+  
+  IMX335_write_register(ViPipe, 0x30B0, 0x10); // - All pixels
+  IMX335_write_register(ViPipe, 0x30B1, 0x08); // - All pixels
+  
+  IMX335_write_register(ViPipe, 0x30B4, 0x10);
+  IMX335_write_register(ViPipe, 0x30B5, 0x10);
+  
+  IMX335_write_register(ViPipe, 0x30B6, 0x00);
+  IMX335_write_register(ViPipe, 0x30B7, 0x00);
+  
+  IMX335_write_register(ViPipe, 0x3112, 0x10);
+  IMX335_write_register(ViPipe, 0x3113, 0x00);
+  
+  IMX335_write_register(ViPipe, 0x3116, 0x10);
+  IMX335_write_register(ViPipe, 0x3117, 0x00);
+  
+
+  // - OK
+  imx335_default_reg_init(ViPipe);
+  IMX335_write_register(ViPipe, 0x3000, 0x00); // Standby Cancel
+  delay_ms(18);
+  IMX335_write_register(ViPipe, 0x3002, 0x00);
+
+  printf("------- Sony IMX335 2x2 binning mode 1296x972 @ 60fps -------\n");
 }
