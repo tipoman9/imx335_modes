@@ -989,8 +989,8 @@ void IMX335_linear_binning_30fps_12bit_init(VI_PIPE ViPipe)
 void IMX335_binning_60pfs_init(VI_PIPE ViPipe) {
   
   //30fps instead
-  IMX335_linear_binning_30fps_12bit_init(ViPipe);
-  return;
+  //IMX335_linear_binning_30fps_12bit_init(ViPipe);
+  //return;
 
   IMX335_write_register(ViPipe, 0x3000, 0x01);  // standby
 
