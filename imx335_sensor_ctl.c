@@ -39,6 +39,7 @@ extern ISP_SNS_COMMBUS_U g_aunImx335BusInfo[];
 #define IMX335_4M_30FPS_10BIT_WDR_MODE (3) //2592x1520
 #define IMX335_60FPS_BINNING_MODE      (4) //1296x972
 
+
 int IMX335_i2c_init(VI_PIPE ViPipe)
 {
 	char acDevFile[16] = { 0 };
@@ -249,39 +250,39 @@ void IMX335_linear_5M30_12bit_init(VI_PIPE ViPipe)//Test
 
 	//IMX335_write_register(ViPipe, 0x3018, 0x00);//window mode, 0-default | 3-binning | 4- cropping
 	IMX335_write_register(ViPipe, 0x3018, 0x04);//window mode, 0-default | 3-binning | 4- cropping
-	IMX335_write_register(ViPipe, 0x302C, 0x3c);//HTRIMMING Horiz Start in cropping  START
-	IMX335_write_register(ViPipe, 0x302D, 0x00);
-	IMX335_write_register(ViPipe, 0x302E, 0x20);//HNUM Horiz size 0A20 - 2592 cropping size designation
-	IMX335_write_register(ViPipe, 0x302F, 0x0A);
+	IMX335_write_register(ViPipe, 0x302C, 0x80);//HTRIMMING Horiz Start in cropping  START
+	IMX335_write_register(ViPipe, 0x302D, 0x01);
+	IMX335_write_register(ViPipe, 0x302E, 0x98);//HNUM Horiz size 0A20 - 2592 cropping size designation
+	IMX335_write_register(ViPipe, 0x302F, 0x07);
 
     //2592x1944      2592x1520 
     //DevRect_w=2560  DevRect_h=1440
 	IMX335_write_register(ViPipe, 0x3030, 0xF8);//VMAX default 1194h  , 0CE4 for 2560x1440
 	IMX335_write_register(ViPipe, 0x3031, 0x08);// Cropping 08F8h - 1024  //Input AD 
 	IMX335_write_register(ViPipe, 0x3032, 0x00);
-	IMX335_write_register(ViPipe, 0x3034, 0x26);//HMAX default 0226h  //0294h is for 25fps
-	IMX335_write_register(ViPipe, 0x3035, 0x02);//0294h is for 25fps  , 0113h for 60fps , 16E for 45fps
+	IMX335_write_register(ViPipe, 0x3034, 0x13);//HMAX default 0226h  //0294h is for 25fps
+	IMX335_write_register(ViPipe, 0x3035, 0x01);//0294h is for 25fps  , 0113h for 60fps , 16E for 45fps
 
 
-	IMX335_write_register(ViPipe, 0x3056, 0xB4); //Y-OUTSIZE  effective pixel lines 07ACh
-	IMX335_write_register(ViPipe, 0x3057, 0x05); //5B4h = 1440
+	IMX335_write_register(ViPipe, 0x3056, 0x44); //Y_OUT_SIZE  effective pixel lines 07ACh
+	IMX335_write_register(ViPipe, 0x3057, 0x04); //5B4h = 1440
 
 	IMX335_write_register(ViPipe, 0x3072, 0x28);// Vert Crop start
 	IMX335_write_register(ViPipe, 0x3073, 0x00);
-	IMX335_write_register(ViPipe, 0x3074, 0x50);// Upper left cropping postion
-	IMX335_write_register(ViPipe, 0x3075, 0x02);
+	IMX335_write_register(ViPipe, 0x3074, 0x10);// AREA3_ST_Addr Upper left cropping postion
+	IMX335_write_register(ViPipe, 0x3075, 0x04);
 
-	IMX335_write_register(ViPipe, 0x3076, 0x18);//// Vert Cropping Size designation
-	IMX335_write_register(ViPipe, 0x3077, 0x0C);
+	IMX335_write_register(ViPipe, 0x3076, 0x98);//// AREA3_WIDTH_1 Vert Cropping Size designation * 2 , = Y_OUT_SIZE*2
+	IMX335_write_register(ViPipe, 0x3077, 0x08);
 
 	
 	IMX335_write_register(ViPipe, 0x3050, 0x00);
 
-	IMX335_write_register(ViPipe, 0x30c6, 0x12);//Black Offset Addr 12h
+	IMX335_write_register(ViPipe, 0x30C6, 0x12);//Black Offset Addr 12h
 
 	IMX335_write_register(ViPipe, 0x30CE, 0x64);//UNRD_Line_Max in cropping 
-	IMX335_write_register(ViPipe, 0x30D8, 0x6c);//UNREAD_ED_ADR in cropping
-	IMX335_write_register(ViPipe, 0x30D9, 0x0e);
+	IMX335_write_register(ViPipe, 0x30D8, 0x78);//UNREAD_ED_ADR in cropping
+	IMX335_write_register(ViPipe, 0x30D9, 0x0D);
 
 	IMX335_write_register(ViPipe, 0x314C, 0xC0);
 

@@ -140,6 +140,8 @@ extern int IMX335_read_register(VI_PIPE ViPipe, int addr);
 
 #define IMX335_RES_IS_BINNING(w, h)  (((w) == 1296) && ((h) == 972))
 
+#define IMX335_RES_IS_1080P(w, h)  (((w) == 1920) && ((h) == 1080))
+
 // sensor gain
 #define IMX335_AGAIN_MIN (1024)
 #define IMX335_AGAIN_MAX (32381) // the max again is 32381
@@ -1732,6 +1734,10 @@ cmos_set_image_mode(VI_PIPE ViPipe,
 //			IMX335_RES_IS_BINNING_12BIT(			//new this will run 30fps binning
 //			    pstSensorImageMode->u16Width,
 //			    pstSensorImageMode->u16Height) ||				
+
+			IMX335_RES_IS_1080P(			//new this will run 30fps binning
+			    pstSensorImageMode->u16Width,
+			    pstSensorImageMode->u16Height) ||				
 		    IMX335_RES_IS_4M_10BIT_LINEAR(
 			    pstSensorImageMode->u16Width,
 			    pstSensorImageMode->u16Height)) {
