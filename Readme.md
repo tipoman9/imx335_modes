@@ -1,14 +1,16 @@
 
-# compile OpenIPC for Hisilicon in /home/home/src/openipc/
-# change code and copy over stock drivers
+#compile OpenIPC for Hisilicon in /home/home/src/openipc/
+#change code and copy over stock drivers
+
+```
 cp imx335_sensor_ctl.c /home/home/src/openipc/output/build/hisilicon-opensdk/libraries/sensor/hi3516ev200/sony_imx335
 cp imx335_cmos.c /home/home/src/openipc/output/build/hisilicon-opensdk/libraries/sensor/hi3516ev200/sony_imx335
+```
+#This will rebuild it
+```make -C /home/home/src/openipc/output/ hisilicon-opensdk-rebuild```
 
-# This will rebuild it
-make -C /home/home/src/openipc/output/ hisilicon-opensdk-rebuild
-
-# copy to device
-scp /home/home/src/openipc/output/build/hisilicon-opensdk/libraries/sensor/hi3516ev200/sony_imx335/libsns_imx335.so root@192.168.1.88:/usr/lib/sensors/libsns_imx335.so
+#copy to device
+```scp /home/home/src/openipc/output/build/hisilicon-opensdk/libraries/sensor/hi3516ev200/sony_imx335/libsns_imx335.so root@192.168.1.88:/usr/lib/sensors/libsns_imx335.so```
 
 
 Added 60fps binning mode, can be run at 45fps max. Code ported from:
@@ -25,11 +27,11 @@ comment:
 set:
 ```Isp_FrameRate=45```
 set:
-# for binning
+#for binning
 ```DevRect_w=1296```
 ```DevRect_h=972```
 
-# for cropped 1080p mode
+#for cropped 1080p mode
 ```DevRect_w=1920```
 ```DevRect_h=1080```
 
@@ -42,8 +44,9 @@ fps: 45
 size: 1920x1080
 ```
 
-#for binning choose either  
-#  size: 1296x972
-#  size: 1280x720
+for binning choose either resolution
+```
+#size: 1296x972
+#size: 1280x720
 ```
 
