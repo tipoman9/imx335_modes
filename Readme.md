@@ -1,12 +1,13 @@
 
-#compile for Hisilicon
+# compile OpenIPC for Hisilicon in /home/home/src/openipc/
+# change code and copy over stock drivers
 cp imx335_sensor_ctl.c /home/home/src/openipc/output/build/hisilicon-opensdk/libraries/sensor/hi3516ev200/sony_imx335
 cp imx335_cmos.c /home/home/src/openipc/output/build/hisilicon-opensdk/libraries/sensor/hi3516ev200/sony_imx335
 
-# This is will rebuild it
+# This will rebuild it
 make -C /home/home/src/openipc/output/ hisilicon-opensdk-rebuild
 
-#copy to device
+# copy to device
 scp /home/home/src/openipc/output/build/hisilicon-opensdk/libraries/sensor/hi3516ev200/sony_imx335/libsns_imx335.so root@192.168.1.88:/usr/lib/sensors/libsns_imx335.so
 
 
@@ -24,20 +25,22 @@ comment:
 set:
 ```Isp_FrameRate=45```
 set:
-```# for binning
-DevRect_w=1296
-DevRect_h=972
+# for binning
+```DevRect_w=1296```
+```DevRect_h=972```
 
 # for cropped 1080p mode
-DevRect_w=1920
-DevRect_h=1080
-```
+```DevRect_w=1920```
+```DevRect_h=1080```
+
 
 in majestic.yaml
-```video0:
+```
+video0:
 fps: 45
 #cropped
 size: 1920x1080
+```
 
 #for binning choose either  
 #  size: 1296x972
