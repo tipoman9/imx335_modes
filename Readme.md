@@ -1,6 +1,16 @@
+Higher FPS sensor driver for imx335 sensor on Goke/Hisilicon SoCs.
+Sensor modes added:
+### 2592x1520 43fps , slightly cropped vertically to 16:9
 
-#compile OpenIPC for Hisilicon in /home/home/src/openipc/
-#change code and copy over stock drivers
+### 2592x1944 stock fullscale mode boosted to 40fps
+
+### 1920x1080 cropped, max 45fps , zoom 2x
+
+### 1296x972 binning max 45fps, 
+
+# To compile
+Compile OpenIPC for Hisilicon in ```/home/home/src/openipc/```
+Change code and copy over stock drivers
 
 ```
 cp imx335_sensor_ctl.c /home/home/src/openipc/output/build/hisilicon-opensdk/libraries/sensor/hi3516ev200/sony_imx335
@@ -9,44 +19,30 @@ cp imx335_cmos.c /home/home/src/openipc/output/build/hisilicon-opensdk/libraries
 #This will rebuild it
 ```make -C /home/home/src/openipc/output/ hisilicon-opensdk-rebuild```
 
-#copy to device
-```scp /home/home/src/openipc/output/build/hisilicon-opensdk/libraries/sensor/hi3516ev200/sony_imx335/libsns_imx335.so root@192.168.1.88:/usr/lib/sensors/libsns_imx335.so```
+#copy driver to device
+```scp /home/home/src/openipc/output/build/hisilicon-opensdk/libraries/sensor/hi3516ev200/sony_imx335/libsns_imx335.so root@192.168.1.88:/usr/lib/sensors/libsns_imx335ex.so```
 
-
-Added 60fps binning mode, can be run at 45fps max. Code ported from:
+60fps binning mode, can be run at 45fps max. Code ported from:
 https://github.com/OpenIPC/silicon_research/commit/52e0faadbdd830aa989902aeba94e1f5ab65483f
 
-Added 60fps cropped 1920x1080 mode, can be run at 45fps max.
-
-To configure. Copy new driver to camera as usr/lib/sensors/libsns_imx335_45fps.so
-Edit /etc/sensors/imx335_i2c_4M.ini
-set:
-```DllFile=libsns_imx335_45fps.so```
-comment:
-```;clock=27MHz```
-set:
-```Isp_FrameRate=45```
-set:
-#for binning
-```DevRect_w=1296```
-```DevRect_h=972```
-
-#for cropped 1080p mode
-```DevRect_w=1920```
-```DevRect_h=1080```
 
 
-in majestic.yaml
+# To configure. 
+Copy new driver to camera as usr/lib/sensors/libsns_imx335ex.so
+Copy imx335_1080p60fps.ini to /etc/sensors/imx335_ex.ini
+
+in /etc/majestic.yaml set:
 ```
 video0:
-fps: 45
-#cropped
-size: 1920x1080
+  codec: h265
+  rcMode: cbr
+  gopSize: 1.5
+  size: 1920x1080
+  fps: 45
+...
+isp:
+  sensorConfig: /etc/sensors/imx335_fps.ini
 ```
 
-for binning choose either resolution
-```
-#size: 1296x972
-#size: 1280x720
-```
+Follow instructions in imx335_ex.ini to set the sensor mode
 
