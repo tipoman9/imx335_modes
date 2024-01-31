@@ -16,10 +16,10 @@ Change code and copy over stock drivers
 cp imx335_sensor_ctl.c /home/home/src/openipc/output/build/hisilicon-opensdk/libraries/sensor/hi3516ev200/sony_imx335
 cp imx335_cmos.c /home/home/src/openipc/output/build/hisilicon-opensdk/libraries/sensor/hi3516ev200/sony_imx335
 ```
-#This will rebuild it
+This will rebuild it: 
 ```make -C /home/home/src/openipc/output/ hisilicon-opensdk-rebuild```
 
-#copy driver to device
+copy driver to device: 
 ```scp /home/home/src/openipc/output/build/hisilicon-opensdk/libraries/sensor/hi3516ev200/sony_imx335/libsns_imx335.so root@192.168.1.88:/usr/lib/sensors/libsns_imx335ex.so```
 
 60fps binning mode, can be run at 45fps max. Code ported from:
@@ -28,8 +28,9 @@ https://github.com/OpenIPC/silicon_research/commit/52e0faadbdd830aa989902aeba94e
 
 
 # To configure. 
-Copy new driver to camera as usr/lib/sensors/libsns_imx335ex.so
-Copy imx335_1080p60fps.ini to /etc/sensors/imx335_ex.ini
+Copy new driver to camera as ```usr/lib/sensors/libsns_imx335ex.so```
+
+Copy imx335_fps.ini to ```/etc/sensors/imx335_fps.ini```
 
 in /etc/majestic.yaml set:
 ```
@@ -44,5 +45,5 @@ isp:
   sensorConfig: /etc/sensors/imx335_fps.ini
 ```
 
-Follow instructions in imx335_ex.ini to set the sensor mode
+### Follow instructions in imx335_fps.ini to set the sensor mode
 
