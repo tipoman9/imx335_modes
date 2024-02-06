@@ -247,7 +247,7 @@ void IMX335_exit(VI_PIPE ViPipe)
 	return;
 }
 
-//classic stock modem tweaked to 40fps
+//classic stock mode tweaked to 40fps
 void IMX335_linear_5M30_12bit_init(VI_PIPE ViPipe)
 {
 
@@ -712,11 +712,11 @@ void IMX335_cropped_60fps_1080p_init(VI_PIPE ViPipe)//added by trial and error b
 	IMX335_write_register(ViPipe, 0x3030, 0xF8);//VMAX default 1194h  , 0CE4 for 2560x1440
 	IMX335_write_register(ViPipe, 0x3031, 0x08);// Cropping 08F8h - 1024  //Input AD 
 	IMX335_write_register(ViPipe, 0x3032, 0x00);
-	IMX335_write_register(ViPipe, 0x3034, 0x13);//HMAX default 0226h  //0294h is for 25fps
-	IMX335_write_register(ViPipe, 0x3035, 0x01);//0294h is for 25fps  , 0113h for 60fps , 16E for 45fps
+	IMX335_write_register(ViPipe, 0x3034, 0x6E);//HMAX default 0226h gives 59fps at 1080p, encoder can't handle more than 55!
+	IMX335_write_register(ViPipe, 0x3035, 0x01);//113h for 60fps , 16Eh for 90fps
+												//Can do 90fps when encoder set at 1280x720
 
-
-	IMX335_write_register(ViPipe, 0x3056, 0x44); //Y_OUT_SIZE  effective pixel lines 07ACh
+	IMX335_write_register(ViPipe, 0x3056, 0x4C); //Y_OUT_SIZE  effective pixel lines 07ACh
 	IMX335_write_register(ViPipe, 0x3057, 0x04); //5B4h = 1440
 
 	IMX335_write_register(ViPipe, 0x3072, 0x28);// Vert Crop start
@@ -1462,9 +1462,14 @@ void IMX335_binning_60pfs_init(VI_PIPE ViPipe) {
   
   IMX335_write_register(ViPipe, 0x3018, 0x01);  // - WINMODE = 2x2 binning
   IMX335_write_register(ViPipe, 0x3300, 0x01);  // - TCYCLE = 2x2 binning (0 - all pixels)
-  
-  
-  IMX335_write_register(ViPipe, 0x3034, 0x13);  // - HMAX = 30/60
+
+// this is a test, works without it with default reg  1194h
+  IMX335_write_register(ViPipe, 0x3030, 0xE8);// VMAX default 1194h  , 0CE4 works, 65fps
+  IMX335_write_register(ViPipe, 0x3031, 0x0D);// does not work 08F8h - 1024  
+  IMX335_write_register(ViPipe, 0x3032, 0x00);// can reach 68fps when configured
+  //^^^above^^^^^^^^^^^^^^^^^^^^TEST^^^^^^^^^^^^^^above^^^^
+
+  IMX335_write_register(ViPipe, 0x3034, 0x13);  // - HMAX  113 works for 60  fps
   IMX335_write_register(ViPipe, 0x3035, 0x01);
   
   IMX335_write_register(ViPipe, 0x3050, 0x00);  // - ADBIT = 10bit

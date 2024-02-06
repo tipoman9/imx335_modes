@@ -119,7 +119,9 @@ extern int IMX335_read_register(VI_PIPE ViPipe, int addr);
 #define IMX335_VMAX_4M_30FPS_10BIT_WDR (3300 + IMX335_INCREASE_LINES)//0xCE4
 #define IMX335_VMAX_4M_25FPS_10BIT_WDR (0xBB8 + IMX335_INCREASE_LINES)
 
-#define IMX335_VMAX_BINNING   (0x1194 + IMX335_INCREASE_LINES)
+#define IMX335_VMAX_BINNING   (0x1194 + IMX335_INCREASE_LINES) //!?
+#define IMX335_VMAX_CROPPED_1080P   (0x8F8 + IMX335_INCREASE_LINES) //!? 0x8F8
+#define IMX335_VMAX_CROPPED_1520P   (0xC58 + IMX335_INCREASE_LINES) //!?
 
 // sensor fps mode
 
@@ -379,10 +381,22 @@ static GK_VOID cmos_fps_set(VI_PIPE ViPipe, GK_FLOAT f32Fps,
 
 	switch (pstSnsState->u8ImgMode) {
     case IMX335_60FPS_CROPPED_1080P_MODE:
+	if ((f32Fps <= 90.0) && (f32Fps >= 2.0)) {
+			u32MaxFps = 90;//was 30;
+			u32Lines = IMX335_VMAX_CROPPED_1080P* u32MaxFps/ DIV_0_TO_1_FLOAT(f32Fps);
+			pstAeSnsDft->u32LinesPer500ms =
+				IMX335_VMAX_CROPPED_1080P * 30; //was 15
+			pstSnsState->u32FLStd = u32Lines;
+		} else {
+			ISP_TRACE(MODULE_DBG_ERR, "Not support Fps A: %f\n",
+				  f32Fps);
+			return;
+		}
+		break;
 	case IMX335_1520P_10BIT_MODE:		
 		if ((f32Fps <= 60.0) && (f32Fps >= 2.0)) {
 			u32MaxFps = 60;//was 30;
-			u32Lines = IMX335_VMAX_5M_30FPS_12BIT_LINEAR * u32MaxFps / DIV_0_TO_1_FLOAT(f32Fps);
+			u32Lines = /*IMX335_VMAX_CROPPED_1520P*/ IMX335_VMAX_5M_30FPS_12BIT_LINEAR * u32MaxFps / DIV_0_TO_1_FLOAT(f32Fps);
 			pstAeSnsDft->u32LinesPer500ms =
 				IMX335_VMAX_5M_30FPS_12BIT_LINEAR * 30; //was 15
 			pstSnsState->u32FLStd = u32Lines;
@@ -407,8 +421,8 @@ static GK_VOID cmos_fps_set(VI_PIPE ViPipe, GK_FLOAT f32Fps,
 		break;
 
  	case IMX335_60FPS_BINNING_MODE: {
-        u32MaxFps                     = 60;
-        u32Lines                      = IMX335_VMAX_BINNING * u32MaxFps / DIV_0_TO_1_FLOAT(f32Fps);
+        u32MaxFps                     = 90;//was 60
+        u32Lines                      =  0xBE8 * u32MaxFps / DIV_0_TO_1_FLOAT(f32Fps);
         pstAeSnsDft->u32LinesPer500ms = IMX335_VMAX_BINNING * 30;
         pstSnsState->u32FLStd         = u32Lines;
     }; break;		
