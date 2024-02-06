@@ -1,4 +1,4 @@
-Higher FPS sensor driver for imx335 sensor on Goke/Hisilicon SoCs.
+# Higher FPS imx335 sensor driver on Goke/Hisilicon SoCs.
 Sensor modes added:
 ### 2592x1520 50fps , slightly cropped vertically to 16:9
 Isp_FrameRate=52 # max supported value on hi356ev300 when majestic is set to 1920x1080 52fps
@@ -14,8 +14,8 @@ Max Isp_FrameRate=55 for 1920x1080
 Isp_FrameRate=68 #  # max supported value on hi356ev300 at 1280x720
 
 # To compile
-Compile OpenIPC for Hisilicon in ```/home/home/src/openipc/```
-Change code and copy over stock drivers
+Compile OpenIPC for Hisilicon in ```/home/home/src/openipc/```. 
+Change code and copy over stock drivers.
 
 ```
 cp imx335_sensor_ctl.c /home/home/src/openipc/output/build/hisilicon-opensdk/libraries/sensor/hi3516ev200/sony_imx335
@@ -27,10 +27,8 @@ This will rebuild it:
 copy driver to device: 
 ```scp /home/home/src/openipc/output/build/hisilicon-opensdk/libraries/sensor/hi3516ev200/sony_imx335/libsns_imx335.so root@192.168.1.88:/usr/lib/sensors/libsns_imx335ex.so```
 
-60fps binning mode, can be run at 45fps max. Code ported from:
-https://github.com/OpenIPC/silicon_research/commit/52e0faadbdd830aa989902aeba94e1f5ab65483f
-
-
+binning mode code ported from: https://github.com/OpenIPC/silicon_research/commit/52e0faadbdd830aa989902aeba94e1f5ab65483f . 
+To run at  above 45fps a recent version of majestic is required.
 
 # To configure. 
 Copy new driver to camera as ```usr/lib/sensors/libsns_imx335ex.so```
