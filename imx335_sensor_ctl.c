@@ -536,24 +536,17 @@ void IMX335__2592_1944_60fps10bit_init(VI_PIPE ViPipe)
 //Cropped vertically, 16:9, on hi3516ec300 24fps at h265 are possible 
 void IMX335_cropped_41fps_2592_1520_init(VI_PIPE ViPipe)//added by trial and error by Tipoman.
 {		
-	//Restart the sensor and take default registry values
-	IMX335_write_register(ViPipe, 0x3004, 0x04);
-	IMX335_write_register(ViPipe, 0x3004, 0x00);
-	IMX335_write_register(ViPipe, 0x3000, 0x01);//pause
-	IMX335_write_register(ViPipe, 0x3002, 0x01);//continue
-	IMX335_write_register(ViPipe, 0x3004, 0x04);//restart
-	IMX335_write_register(ViPipe, 0x3004, 0x00);
-	delay_ms(18);//Not needed maybe
 
-	IMX335_write_register(ViPipe, 0x3000, 0x01); // standby
+	SensorReset(ViPipe);
 
 	IMX335_write_register(ViPipe, 0x300C, 0x5B);
 	IMX335_write_register(ViPipe, 0x300D, 0x40);
 
 	//IMX335_write_register(ViPipe, 0x3018, 0x00);//window mode, 0-default | 3-binning | 4- cropping
 	IMX335_write_register(ViPipe, 0x3018, 0x04);//window mode, 0-default | 3-binning | 4- cropping
-	//IMX335_write_register(ViPipe, 0x302C, 0x80);//  HTRIMMING Horiz Start in cropping  START
-	//IMX335_write_register(ViPipe, 0x302D, 0x01);
+
+	IMX335_write_register(ViPipe, 0x302C, 0x30);//  HTRIMMING Horiz Start in cropping  START
+	IMX335_write_register(ViPipe, 0x302D, 0x00);
 	IMX335_write_register(ViPipe, 0x302E, 0x20);//HNUM Horiz size 0A20 - 2592 cropping size designation
 	IMX335_write_register(ViPipe, 0x302F, 0x0A);//0798 for 1920
 
@@ -571,8 +564,8 @@ void IMX335_cropped_41fps_2592_1520_init(VI_PIPE ViPipe)//added by trial and err
 
 	IMX335_write_register(ViPipe, 0x3072, 0x28);// Vert Crop start 0x28
 	IMX335_write_register(ViPipe, 0x3073, 0x00);
-	//IMX335_write_register(ViPipe, 0x3074, 0x10);// AREA3_ST_Addr Upper left cropping postion
-	//IMX335_write_register(ViPipe, 0x3075, 0x04);
+	IMX335_write_register(ViPipe, 0x3074, 0xB0);// AREA3_ST_Addr Upper left cropping postion
+	IMX335_write_register(ViPipe, 0x3075, 0x00);
 
 	IMX335_write_register(ViPipe, 0x3076, 0x08);//// AREA3_WIDTH_1 Vert Cropping Size designation * 2 , = Y_OUT_SIZE*2
 	IMX335_write_register(ViPipe, 0x3077, 0x0C);
@@ -695,9 +688,21 @@ void IMX335_cropped_41fps_2592_1520_init(VI_PIPE ViPipe)//added by trial and err
 }
 
 
+void SensorReset(VI_PIPE ViPipe){
+	 IMX335_write_register(ViPipe, 0x3000, 0x01); /* standby */
+     IMX335_write_register(ViPipe, 0x3001, 0x00);
+	 	delay_ms(18);//Not needed maybe
+     IMX335_write_register(ViPipe, 0x3002, 0x01);//continue
+     IMX335_write_register(ViPipe, 0x3003, 0x00);
+	 	delay_ms(18);//Not needed maybe
+     IMX335_write_register(ViPipe, 0x3004, 0x04);//restart
+	 	delay_ms(18);//Not needed maybe
+	 IMX335_write_register(ViPipe, 0x3004, 0x00);
+}
 void IMX335_cropped_60fps_1080p_init(VI_PIPE ViPipe)//added by trial and error by Tipoman.
 {		
 	//Restart the sensor and take default registry values
+/*	
 	IMX335_write_register(ViPipe, 0x3004, 0x04);
 	IMX335_write_register(ViPipe, 0x3004, 0x00);
 	IMX335_write_register(ViPipe, 0x3000, 0x01);//pause
@@ -707,6 +712,8 @@ void IMX335_cropped_60fps_1080p_init(VI_PIPE ViPipe)//added by trial and error b
 	delay_ms(18);//Not needed maybe
 
 	IMX335_write_register(ViPipe, 0x3000, 0x01); // standby
+*/
+	SensorReset(ViPipe);
 
 	IMX335_write_register(ViPipe, 0x300C, 0x5B);
 	IMX335_write_register(ViPipe, 0x300D, 0x40);
@@ -852,7 +859,7 @@ void IMX335_cropped_60fps_1080p_init(VI_PIPE ViPipe)//added by trial and error b
 	delay_ms(18);
 	IMX335_write_register(ViPipe, 0x3002, 0x00);
 
-	printf("-------Sony  IMX335_Cropped_1920x1080_10bit_90fps Initial OK!-------\n");
+	printf("------=>Sony  IMX335_Cropped_1920x1080_10bit_90fps Initial OK!-------\n");
 }
 
 void IMX335_wdr_5M30_10bit_init(VI_PIPE ViPipe)
@@ -1591,21 +1598,47 @@ void IMX335_binning_60pfs_init(VI_PIPE ViPipe) {
 void IMX335_linear_5M30_12bit_init(VI_PIPE ViPipe)
 {
 
-	  //Restart the sensor and take default registry values
-	IMX335_write_register(ViPipe, 0x3004, 0x04);
-	IMX335_write_register(ViPipe, 0x3004, 0x00);
-	IMX335_write_register(ViPipe, 0x3000, 0x01);//pause
-	IMX335_write_register(ViPipe, 0x3002, 0x01);//continue
-
-	IMX335_write_register(ViPipe, 0x3004, 0x04);//restart
-	IMX335_write_register(ViPipe, 0x3004, 0x00);
-	delay_ms(28);//Not needed maybe
-
-	//IMX335_write_register(ViPipe, 0x3000, 0x01); // standby
-
+	SensorReset(ViPipe);
+	
 	IMX335_write_register(ViPipe, 0x300C, 0x5B);
 	IMX335_write_register(ViPipe, 0x300D, 0x40);
+
+	if (1==1){
+		
+		IMX335_write_register(ViPipe, 0x3018, 0x00);//window mode, 0-default | 3-binning | 4- cropping
+		
+		IMX335_write_register(ViPipe, 0x302E, 0x38);//HNUM Horiz size 0A20 - 2592 cropping size designation
+		IMX335_write_register(ViPipe, 0x302F, 0x0A);//0798 for 1920
+    	
+		IMX335_write_register(ViPipe, 0x3030, 0x94);// VMAX default 1194h  , 
+		IMX335_write_register(ViPipe, 0x3031, 0x11);// 
+		IMX335_write_register(ViPipe, 0x3032, 0x00);
+		IMX335_write_register(ViPipe, 0x3034, 0x26);//HMAX default 0226h/0294h is for 25fps,    14A works 38fos
+		IMX335_write_register(ViPipe, 0x3035, 0x02);// 12C for 41fps
+
+
+		IMX335_write_register(ViPipe, 0x3056, 0xAC); //Y_OUT_SIZE  effective pixel lines 07ACh
+		IMX335_write_register(ViPipe, 0x3057, 0x07); //5B4h = 1440
+
+		IMX335_write_register(ViPipe, 0x3072, 0x28);// Vert Crop start 0x28
+		IMX335_write_register(ViPipe, 0x3073, 0x00);
+	
+
+		IMX335_write_register(ViPipe, 0x3076, 0x58);//// AREA3_WIDTH_1 Vert Cropping Size designation * 2 , = Y_OUT_SIZE*2
+		IMX335_write_register(ViPipe, 0x3077, 0x0F);
+	}
+
+
 	IMX335_write_register(ViPipe, 0x3050, 0x00);
+
+	//
+	if (1==1){//return to defaults not working?!
+		IMX335_write_register(ViPipe, 0x30C6, 0x00);//Black Offset Addr 12h
+		IMX335_write_register(ViPipe, 0x30CE, 0x00);//UNRD_Line_Max in cropping 
+		IMX335_write_register(ViPipe, 0x30D8, 0x4C);//UNREAD_ED_ADR in cropping
+		IMX335_write_register(ViPipe, 0x30D9, 0x10);
+	}
+	//
 
 	IMX335_write_register(ViPipe, 0x314C, 0xC0);
 

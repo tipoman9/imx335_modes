@@ -56,5 +56,4 @@ isp:
 All modes will work at fps: 45, some of them can run at higher refresh rate.
 
 ### gk7205v300
-For some reason the sensor does not behave the same on gk7205v300.
-fps in some modes is lower, and changing modes "on the fly" does not always work.
+Works...
