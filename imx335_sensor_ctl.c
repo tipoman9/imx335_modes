@@ -281,7 +281,53 @@ void IMX335_linear_5M30_12bit_40fps_init(VI_PIPE ViPipe)
 	IMX335_write_register(ViPipe, 0x3034, 0xA0); //HMAX default 0226h/0294h is for 25fps,    14A works 38fos
 	IMX335_write_register(ViPipe, 0x3035, 0x01);// 200 works at 32fps , 1B0 at 38fps, 190 at 41fps with problems!,  
 
+
+	if (1==1){
+		
+		IMX335_write_register(ViPipe, 0x3018, 0x00);//window mode, 0-default | 3-binning | 4- cropping
+		
+		IMX335_write_register(ViPipe, 0x302C, 0x30);//  HTRIMMING Horiz Start in cropping  START
+		IMX335_write_register(ViPipe, 0x302D, 0x00);
+
+		IMX335_write_register(ViPipe, 0x302E, 0x38);//HNUM Horiz size 0A20 - 2592 cropping size designation
+		IMX335_write_register(ViPipe, 0x302F, 0x0A);//0798 for 1920
+    	
+		IMX335_write_register(ViPipe, 0x3030, 0x94);// VMAX default 1194h  , 
+		IMX335_write_register(ViPipe, 0x3031, 0x11);// 
+		IMX335_write_register(ViPipe, 0x3032, 0x00);
+
+		//IMX335_write_register(ViPipe, 0x3034, 0x26);//HMAX default 0226h/0294h is for 25fps,    14A works 38fos
+		//IMX335_write_register(ViPipe, 0x3035, 0x02);// 12C for 41fps
+		
+		//This increases the FPS !!!
+		IMX335_write_register(ViPipe, 0x3034, 0xA0); //HMAX default 0226h/0294h is for 25fps,    14A works 38fos
+		IMX335_write_register(ViPipe, 0x3035, 0x01);// 200 works at 32fps , 1B0 at 38fps, 190 at 41fps with problems!,  
+
+
+
+		IMX335_write_register(ViPipe, 0x3056, 0xAC); //Y_OUT_SIZE  effective pixel lines 07ACh
+		IMX335_write_register(ViPipe, 0x3057, 0x07); //5B4h = 1440
+
+		IMX335_write_register(ViPipe, 0x3072, 0x28);// Vert Crop start 0x28
+		IMX335_write_register(ViPipe, 0x3073, 0x00);
+	
+
+		IMX335_write_register(ViPipe, 0x3076, 0x58);//// AREA3_WIDTH_1 Vert Cropping Size designation * 2 , = Y_OUT_SIZE*2
+		IMX335_write_register(ViPipe, 0x3077, 0x0F);
+	}
+
+
+
     IMX335_write_register(ViPipe, 0x3050, 0x00);
+
+	if (1==1){//return to defaults not working?!
+		IMX335_write_register(ViPipe, 0x3074, 0xB0);// AREA3_ST_Addr Upper left cropping postion
+		IMX335_write_register(ViPipe, 0x3075, 0x00);
+		IMX335_write_register(ViPipe, 0x30C6, 0x00);//Black Offset Addr 12h
+		IMX335_write_register(ViPipe, 0x30CE, 0x00);//UNRD_Line_Max in cropping 
+		IMX335_write_register(ViPipe, 0x30D8, 0x4C);//UNREAD_ED_ADR in cropping
+		IMX335_write_register(ViPipe, 0x30D9, 0x10);
+	}
 
     IMX335_write_register(ViPipe, 0x314C, 0xC0);
 
@@ -1607,6 +1653,9 @@ void IMX335_linear_5M30_12bit_init(VI_PIPE ViPipe)
 		
 		IMX335_write_register(ViPipe, 0x3018, 0x00);//window mode, 0-default | 3-binning | 4- cropping
 		
+		IMX335_write_register(ViPipe, 0x302C, 0x30);//  HTRIMMING Horiz Start in cropping  START
+		IMX335_write_register(ViPipe, 0x302D, 0x00);
+
 		IMX335_write_register(ViPipe, 0x302E, 0x38);//HNUM Horiz size 0A20 - 2592 cropping size designation
 		IMX335_write_register(ViPipe, 0x302F, 0x0A);//0798 for 1920
     	
@@ -1633,6 +1682,8 @@ void IMX335_linear_5M30_12bit_init(VI_PIPE ViPipe)
 
 	//
 	if (1==1){//return to defaults not working?!
+		IMX335_write_register(ViPipe, 0x3074, 0xB0);// AREA3_ST_Addr Upper left cropping postion
+		IMX335_write_register(ViPipe, 0x3075, 0x00);
 		IMX335_write_register(ViPipe, 0x30C6, 0x00);//Black Offset Addr 12h
 		IMX335_write_register(ViPipe, 0x30CE, 0x00);//UNRD_Line_Max in cropping 
 		IMX335_write_register(ViPipe, 0x30D8, 0x4C);//UNREAD_ED_ADR in cropping
