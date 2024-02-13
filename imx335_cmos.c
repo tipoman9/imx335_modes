@@ -13,6 +13,8 @@
 #include "gk_api_awb.h"
 #include "hicompat.h"
 
+#define GOKE_HW 1
+
 #include "imx335_cmos_ex.h"
 #ifdef __cplusplus
 #if __cplusplus
@@ -170,6 +172,7 @@ extern int IMX335_read_register(VI_PIPE ViPipe, int addr);
 			pstSensorImageMode->u16Height,                            \
 			pstSensorImageMode->f32Fps, pstSnsState->enWDRMode);      \
 	} while (0)
+
 
 static GK_S32 cmos_get_ae_default(VI_PIPE ViPipe,
 				  AE_SENSOR_DEFAULT_S *pstAeSnsDft)
@@ -396,20 +399,27 @@ static GK_VOID cmos_fps_set(VI_PIPE ViPipe, GK_FLOAT f32Fps,
 		}
 		break;
 	case IMX335_1520P_10BIT_MODE:		
-		if ((f32Fps <= 82.0) && (f32Fps >= 2.0)) { // this is the teorethical max as calculated by the sensor registers???
-			u32MaxFps = 82;// Found by trial and error for hi3516ev300
-			u32Lines =   IMX335_VMAX_CROPPED_1520P /* IMX335_VMAX_5M_30FPS_12BIT_LINEAR*/ * u32MaxFps / DIV_0_TO_1_FLOAT(f32Fps);
+		if ((f32Fps <= 82.0) && (f32Fps >= 2.0)) { // this is the teorethical max as calculated by the sensor registers???		
+
+			//u32MaxFps = 82;// Found by trial and error for hi3516ev300
+
+			float ratio=1;
+			if (GOKE_HW==1)
+				u32MaxFps = 49;//this is the max achievable frame rate with Goke
+			u32Lines =  IMX335_VMAX_CROPPED_1520P /* IMX335_VMAX_5M_30FPS_12BIT_LINEAR*/ * u32MaxFps / DIV_0_TO_1_FLOAT(f32Fps);
 			//u32Lines = 3200 form max fps
 			pstAeSnsDft->u32LinesPer500ms =
 				IMX335_VMAX_CROPPED_1520P * 30; //was 15
 			pstSnsState->u32FLStd = u32Lines;
-			ISP_TRACE(MODULE_DBG_ERR, "Set 1520P_10BIT_MODE fps: %f\n",f32Fps);
+			ISP_TRACE(MODULE_DBG_ERR, "Set 1520P_10BIT_MODE %f fps: %f\n",ratio, f32Fps);
 		} else {
 			ISP_TRACE(MODULE_DBG_ERR, "Not support Fps CROPPED_1520P : %f\n",
 				  f32Fps);
 			return;
 		}
 		break;
+
+	case IMX335_60FPS_FULL_1944P_MODE:
 	case IMX335_5M_30FPS_12BIT_LINEAR_MODE:
 		if ((f32Fps <= 30.0) && (f32Fps >= 2.0)) {
 			u32MaxFps = 30;
@@ -425,12 +435,16 @@ static GK_VOID cmos_fps_set(VI_PIPE ViPipe, GK_FLOAT f32Fps,
 		if ((f32Fps >30) ) {			
 			pstSnsState->u8ImgMode=IMX335_60FPS_FULL_1944P_MODE;//Set new mode
 			u32MaxFps = 45;//was 30;
-			u32Lines = IMX335_VMAX_5M_30FPS_12BIT_LINEAR * u32MaxFps / DIV_0_TO_1_FLOAT(f32Fps);
+
+			float ratio=1;
+			if (GOKE_HW==1)
+				u32MaxFps=33;//this is the max achievable frame rate with Goke
+			u32Lines =  IMX335_VMAX_5M_30FPS_12BIT_LINEAR * u32MaxFps / DIV_0_TO_1_FLOAT(f32Fps);
 			pstAeSnsDft->u32LinesPer500ms =
 				IMX335_VMAX_5M_30FPS_12BIT_LINEAR * 15; //was 15
 			pstSnsState->u32FLStd = u32Lines;
 			
-			ISP_TRACE(MODULE_DBG_ERR, "Set 60FPS_FULL_1944P_MODE fps: %f\n",f32Fps);
+			ISP_TRACE(MODULE_DBG_ERR, "Set 60FPS_FULL_1944P_MODE %f fps: %f\n",ratio, f32Fps);
 		} else {
 			ISP_TRACE(MODULE_DBG_ERR, "Not support Fps A: %f\n",
 				  f32Fps);
@@ -506,13 +520,13 @@ static GK_VOID cmos_fps_set(VI_PIPE ViPipe, GK_FLOAT f32Fps,
 		break;
 */
 	default:
-		ISP_TRACE(MODULE_DBG_ERR, "Not support this Mode!!!\n");
+		ISP_TRACE(MODULE_DBG_ERR, "Not support this Mode : %d !!!\n",pstSnsState->u8ImgMode);
 		return;
 		break;
 	}
 
 	/* SHR 16bit, So limit full_lines as 0xFFFF */
-	if (f32Fps > u32MaxFps) {
+	if (/*f32Fps > u32MaxFps*/ 0) {//disable the check to easily tweak fpsfalse
 		ISP_TRACE(MODULE_DBG_ERR, "Not support Fps Z : %f\n", f32Fps);
 		return;
 	}
