@@ -401,7 +401,7 @@ static GK_VOID cmos_fps_set(VI_PIPE ViPipe, GK_FLOAT f32Fps,
 	case IMX335_1520P_10BIT_MODE:		
 		if ((f32Fps <= 82.0) && (f32Fps >= 2.0)) { // this is the teorethical max as calculated by the sensor registers???		
 
-			//u32MaxFps = 82;// Found by trial and error for hi3516ev300
+			u32MaxFps = 60;// Found by trial and error for hi3516ev300
 
 			float ratio=1;
 			if (GOKE_HW==1)
