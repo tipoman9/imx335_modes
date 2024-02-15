@@ -25,6 +25,7 @@ Change code and copy over stock drivers.
 ```
 cp imx335_sensor_ctl.c /home/home/src/openipc/output/build/hisilicon-opensdk/libraries/sensor/hi3516ev200/sony_imx335
 cp imx335_cmos.c /home/home/src/openipc/output/build/hisilicon-opensdk/libraries/sensor/hi3516ev200/sony_imx335
+cp Makefile /home/home/src/openipc/output/build/hisilicon-opensdk/libraries/sensor/hi3516ev200/sony_imx335
 ```
 This will rebuild it: 
 ```make -C /home/home/src/openipc/output/ hisilicon-opensdk-rebuild```

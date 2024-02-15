@@ -13,7 +13,6 @@
 #include "gk_api_awb.h"
 #include "hicompat.h"
 
-#define GOKE_HW 1
 
 #include "imx335_cmos_ex.h"
 #ifdef __cplusplus
@@ -172,6 +171,16 @@ extern int IMX335_read_register(VI_PIPE ViPipe, int addr);
 			pstSensorImageMode->u16Height,                            \
 			pstSensorImageMode->f32Fps, pstSnsState->enWDRMode);      \
 	} while (0)
+
+
+#define XSTR(x) STR(x)
+#define STR(x) #x
+
+// add  -DCHIPARCH=$(CHIPARCH) to make file!!!
+// override CFLAGS += -DSDK_CODE=$(SDK_CODE) -fPIC -I$(CURDIR)/../../../../include -DCHIPARCH=$(CHIPARCH)
+#ifndef CHIPARCH
+    #error "CHIPARCH is not defined. Please specify CHIPARCH during compilation."
+#endif
 
 
 static GK_S32 cmos_get_ae_default(VI_PIPE ViPipe,
@@ -376,6 +385,7 @@ static GK_S32 cmos_get_ae_default(VI_PIPE ViPipe,
 static GK_VOID cmos_fps_set(VI_PIPE ViPipe, GK_FLOAT f32Fps,
 			    AE_SENSOR_DEFAULT_S *pstAeSnsDft)
 {
+
 	GK_U32 u32MaxFps;
 	GK_U32 u32Lines;
 	ISP_SNS_STATE_S *pstSnsState = GK_NULL;
@@ -401,17 +411,34 @@ static GK_VOID cmos_fps_set(VI_PIPE ViPipe, GK_FLOAT f32Fps,
 	case IMX335_1520P_10BIT_MODE:		
 		if ((f32Fps <= 82.0) && (f32Fps >= 2.0)) { // this is the teorethical max as calculated by the sensor registers???		
 
-			u32MaxFps = 60;// Found by trial and error for hi3516ev300
+			u32MaxFps = 60;// Found by trial and error for hi3516ev300			
 
-			float ratio=1;
-			if (GOKE_HW==1)
-				u32MaxFps = 49;//this is the max achievable frame rate with Goke
-			u32Lines =  IMX335_VMAX_CROPPED_1520P /* IMX335_VMAX_5M_30FPS_12BIT_LINEAR*/ * u32MaxFps / DIV_0_TO_1_FLOAT(f32Fps);
+// Need to have different values for Goke and Hisilicon encoders!
+#ifdef CHIPARCH
+     printf("CHIPARCH is defined and its value is: " XSTR(CHIPARCH));
+#endif 
+
+
+//#if CHIPARCH == gk7205v200  //Does not work as desired... read some C books
+if (strcmp(XSTR(CHIPARCH), "gk7205v200") == 0){
+				u32MaxFps = 49;//this is the max achievable frame rate with Goke				
+				u32Lines =  IMX335_VMAX_CROPPED_1520P /* IMX335_VMAX_5M_30FPS_12BIT_LINEAR*/ * u32MaxFps / DIV_0_TO_1_FLOAT(f32Fps);
+				ISP_TRACE(MODULE_DBG_ERR, "Goke u32Lines : %d\n",u32Lines);
+}
+//#endif
+
+//#if CHIPARCH == hi3516ev300
+if (strcmp(XSTR(CHIPARCH), "hi3516ev200") == 0){			
+			u32MaxFps = 60;// Found by trial and error for hi3516ev300	
+			u32Lines = /*IMX335_VMAX_CROPPED_1520P*/ IMX335_VMAX_5M_30FPS_12BIT_LINEAR * u32MaxFps / DIV_0_TO_1_FLOAT(f32Fps);			
+			ISP_TRACE(MODULE_DBG_ERR, "HiSillicon u32Lines : %d\n",u32Lines);
+}
+
 			//u32Lines = 3200 form max fps
 			pstAeSnsDft->u32LinesPer500ms =
 				IMX335_VMAX_CROPPED_1520P * 30; //was 15
 			pstSnsState->u32FLStd = u32Lines;
-			ISP_TRACE(MODULE_DBG_ERR, "Set 1520P_10BIT_MODE %f fps: %f\n",ratio, f32Fps);
+			ISP_TRACE(MODULE_DBG_ERR, "Set 1520P_10BIT_MODE u32MaxFps:%f / fps:%f\n",u32MaxFps, f32Fps);
 		} else {
 			ISP_TRACE(MODULE_DBG_ERR, "Not support Fps CROPPED_1520P : %f\n",
 				  f32Fps);
@@ -434,17 +461,18 @@ static GK_VOID cmos_fps_set(VI_PIPE ViPipe, GK_FLOAT f32Fps,
 	//case IMX335_60FPS_FULL_1944P_MODE:
 		if ((f32Fps >30) ) {			
 			pstSnsState->u8ImgMode=IMX335_60FPS_FULL_1944P_MODE;//Set new mode
-			u32MaxFps = 45;//was 30;
+			u32MaxFps = 45;//was 30;			
 
-			float ratio=1;
-			if (GOKE_HW==1)
+			if (strcmp(XSTR(CHIPARCH), "gk7205v200") == 0){
+				ISP_TRACE(MODULE_DBG_ERR, "Goke SoC");
 				u32MaxFps=33;//this is the max achievable frame rate with Goke
+			}
 			u32Lines =  IMX335_VMAX_5M_30FPS_12BIT_LINEAR * u32MaxFps / DIV_0_TO_1_FLOAT(f32Fps);
 			pstAeSnsDft->u32LinesPer500ms =
 				IMX335_VMAX_5M_30FPS_12BIT_LINEAR * 15; //was 15
 			pstSnsState->u32FLStd = u32Lines;
 			
-			ISP_TRACE(MODULE_DBG_ERR, "Set 60FPS_FULL_1944P_MODE %f fps: %f\n",ratio, f32Fps);
+			ISP_TRACE(MODULE_DBG_ERR, "Set 60FPS_FULL_1944P_MODE %f / fps: %f\n",u32MaxFps, f32Fps);
 		} else {
 			ISP_TRACE(MODULE_DBG_ERR, "Not support Fps A: %f\n",
 				  f32Fps);
@@ -530,8 +558,7 @@ static GK_VOID cmos_fps_set(VI_PIPE ViPipe, GK_FLOAT f32Fps,
 		ISP_TRACE(MODULE_DBG_ERR, "Not support Fps Z : %f\n", f32Fps);
 		return;
 	}
-	ISP_TRACE(MODULE_DBG_ERR, "u32Lines : %d\n", u32Lines);
-	ISP_TRACE(MODULE_DBG_ERR, "u32Lines : %f\n", u32Lines);
+	//ISP_TRACE(MODULE_DBG_ERR, "u32Lines : %d\n", u32Lines);	
 
 	if (u32Lines > IMX335_FULL_LINES_MAX) {
 		u32Lines = IMX335_FULL_LINES_MAX;
